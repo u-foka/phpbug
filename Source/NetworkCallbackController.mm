@@ -87,6 +87,11 @@ void NetworkCallbackController::CloseConnection()
     socketHandle_ = NULL;
     [connection_ socketDisconnected];
   }
+    
+  if (listeningSocket_) {
+    close(CFSocketGetNative(listeningSocket_));
+    listeningSocket_ = nil;
+  }
 }
 
 BOOL NetworkCallbackController::WriteStreamCanAcceptBytes()
