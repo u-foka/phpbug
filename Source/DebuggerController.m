@@ -158,6 +158,7 @@
   [errormsg setHidden:YES];
   if (!self.connection.attached)
     return;
+    
   if ([[NSUserDefaults standardUserDefaults] boolForKey:@"BreakOnFirstLine"])
     [self stepIn:self];
 }
@@ -390,6 +391,11 @@
 - (void)sourceUpdated:(StackFrame*)frame
 {
   [self updateSourceViewer];
+    
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"ActivateOnBreak"]) {
+        [NSApp activateIgnoringOtherApps:YES];
+        [[self window] makeKeyAndOrderFront:self];
+    }
 }
 
 - (void)receivedProperties:(NSArray*)properties forTransaction:(NSInteger)transaction

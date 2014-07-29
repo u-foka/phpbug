@@ -38,6 +38,7 @@
     [NSNumber numberWithBool:YES],  @"InspectorWindowVisible",
     [NSMutableArray array],         @"PathReplacements",
     [NSNumber numberWithBool:YES],  @"BreakOnFirstLine",
+    [NSNumber numberWithBool:YES],  @"ActivateOnBreak",
     [NSNumber numberWithBool:YES],  @"DebuggerAttached",
     nil
   ];
@@ -67,6 +68,14 @@
   usesUnstable = usesUnstable ||
       [[feedURL absoluteString] rangeOfString:@"?unstable"].location != NSNotFound;
   [defaults setBool:usesUnstable forKey:kUsesUnstableVersionCast];
+}
+
+- (bool)applicationShouldHandleReopen:(NSApplication*)theApplication hasVisibleWindows:(BOOL)flag
+{
+    if (!flag)
+        [[debugger window] makeKeyAndOrderFront:self];
+    
+    return true;
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification
