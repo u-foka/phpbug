@@ -146,7 +146,12 @@ void PerformQuitSignal(void* info)
 {
   self.queuedWrites = nil;
   connected_ = NO;
-  [writeQueueLock_ release];
+    
+  if (writeQueueLock_)
+  {
+      [writeQueueLock_ release];
+      writeQueueLock_ = nil;
+  }
 
   if (runLoop_) {
     CFRunLoopStop([runLoop_ getCFRunLoop]);
