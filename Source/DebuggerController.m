@@ -159,6 +159,9 @@
   if (!self.connection.attached)
     return;
     
+  [stackController.stack removeAllObjects];
+  [sourceViewer setFile:nil];
+    
   if ([[NSUserDefaults standardUserDefaults] boolForKey:@"BreakOnFirstLine"])
     [self stepIn:self];
 }

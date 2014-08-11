@@ -74,7 +74,7 @@
     file_ = [f retain];
   }
   
-  if (![[NSFileManager defaultManager] fileExistsAtPath:f]) {
+  if (f == nil && [f length] == 0 && ![[NSFileManager defaultManager] fileExistsAtPath:f]) {
     [textView_ setString:@""];
     return;
   }
