@@ -162,8 +162,11 @@
   [stackController.stack removeAllObjects];
   [sourceViewer setFile:nil];
     
-  if ([[NSUserDefaults standardUserDefaults] boolForKey:@"BreakOnFirstLine"])
+  if ([[NSUserDefaults standardUserDefaults] boolForKey:@"BreakOnFirstLine"]) {
     [self stepIn:self];
+  } else {
+    [self run:self];
+  }
 }
 
 /**
