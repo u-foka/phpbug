@@ -48,6 +48,7 @@
 @property (assign) NSUInteger markedLine;
 @property (assign) id delegate;
 
+- (void)setNeedsDisplay:(BOOL)flag;
 - (void)setFile:(NSString*)f;
 - (void)setString:(NSString*)source asFile:(NSString*)path;
 - (void)scrollToLine:(NSUInteger)line;

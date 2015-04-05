@@ -64,6 +64,12 @@
   [super dealloc];
 }
 
+- (void)setNeedsDisplay:(BOOL)flag
+{
+    [ruler_ setNeedsDisplay:flag];
+    [super setNeedsDisplay:flag];
+}
+
 /**
  * Sets the file name as well as the text of the source view
  */
