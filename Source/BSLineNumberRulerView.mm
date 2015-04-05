@@ -28,6 +28,7 @@
 - (NSDictionary*)fontAttributesMarked;
 - (void)drawBreakpointInRect:(NSRect)rect;
 - (void)drawProgramCounterInRect:(NSRect)rect;
+- (void)drawBreakpointAndProgramCounterInRect:(NSRect)rect;
 - (void)drawMarkerInRect:(NSRect)rect fillColor:(NSColor*)fill;
 @end
 
@@ -132,7 +133,9 @@ const CGFloat kArrowWidth = 7.0;
       NSRect markerRect = numberRect;
       markerRect.origin.x = NSMinX(rect);
 
-      if (isMarked) {
+      if (isMarked && isBreakpoint) {
+        [self drawBreakpointAndProgramCounterInRect:markerRect];
+      } else if (isMarked) {
         [self drawProgramCounterInRect:markerRect];
       } else if (isBreakpoint) {
         [self drawBreakpointInRect:markerRect];
@@ -290,6 +293,20 @@ const CGFloat kArrowWidth = 7.0;
 {
   [self drawMarkerInRect:rect
                color:[NSColor colorWithDeviceRed:0.574 green:0.687 blue:0.519 alpha:1.0]];
+}
+
+/**
+ * Draws the program counter (a green arrow) in the specified rectangle.
+ */
+- (void)drawBreakpointAndProgramCounterInRect:(NSRect)rect
+{
+    NSRect blueRect = rect;
+    blueRect.size.width = NSWidth(rect) - kArrowWidth;
+    
+    [self drawMarkerInRect:rect
+                     color:[NSColor colorWithDeviceRed:0.574 green:0.687 blue:0.519 alpha:1.0]];
+    [self drawMarkerInRect:blueRect
+                     color:[NSColor colorWithDeviceRed:0.004 green:0.557 blue:0.851 alpha:1.0]];
 }
 
 /**

@@ -75,7 +75,7 @@
 - (void)awakeFromNib
 {
   [[self window] setExcludedFromWindowsMenu:YES];
-  [[self window] setTitle:[NSString stringWithFormat:@"MacGDBp @ %d", [connection port]]];
+  [[self window] setTitle:[NSString stringWithFormat:@"MacGDBp @ %lu", (unsigned long)[connection port]]];
   [sourceViewer setDelegate:self];
   [stackArrayController setSortDescriptors:[NSArray arrayWithObject:[[[NSSortDescriptor alloc] initWithKey:@"index" ascending:YES] autorelease]]];
   self.connection.attached = [attachedCheckbox_ state] == NSOnState;
