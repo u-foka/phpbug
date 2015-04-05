@@ -23,13 +23,12 @@
 
 @interface BSLineNumberRulerView (Private)
 - (void)computeLineIndex;
-- (NSAttributedString*)attributedStringForLineNumber:(NSUInteger)line;
+- (NSAttributedString*)attributedStringForLineNumber:(NSUInteger)line withMarker:(BOOL)marker;
 - (NSDictionary*)fontAttributes;
+- (NSDictionary*)fontAttributesMarked;
 - (void)drawBreakpointInRect:(NSRect)rect;
 - (void)drawProgramCounterInRect:(NSRect)rect;
-- (void)drawMarkerInRect:(NSRect)rect
-               fillColor:(NSColor*)fill
-             strokeColor:(NSColor*)stroke;
+- (void)drawMarkerInRect:(NSRect)rect fillColor:(NSColor*)fill;
 @end
 
 // Constants {{
@@ -39,6 +38,9 @@ const CGFloat kDefaultWidth = 30.0;
 
 // Padding between the right edge of the ruler and the line number string.
 const CGFloat kRulerRightPadding = 2.5;
+
+// Width of the arrow of the markers
+const CGFloat kArrowWidth = 7.0;
 
 // }}
 
@@ -112,29 +114,31 @@ const CGFloat kRulerRightPadding = 2.5;
                                                              rectCount:&rectCount];
     if (frameRects) {
       NSUInteger lineNumber = line + 1;
+      Breakpoint* bpTest = [[[Breakpoint alloc] initWithLine:lineNumber
+                                                    inFile:[sourceView_ file]] autorelease];
+      BOOL isBreakpoint = [markers containsObject:bpTest];
+      BOOL isMarked = (sourceView_.markedLine == lineNumber);
+      
       NSAttributedString* lineNumberString =
-          [self attributedStringForLineNumber:lineNumber];
+          [self attributedStringForLineNumber:lineNumber withMarker:!(isMarked||isBreakpoint)];
       NSSize stringSize = [lineNumberString size];
 
       CGFloat yCoord = yOffset + NSMinY(frameRects[0]) - NSMinY(visibleRect);
-      NSRect drawRect = NSMakeRect(NSWidth(rect) - stringSize.width - kRulerRightPadding,
+      NSRect numberRect = NSMakeRect(NSWidth(rect) - stringSize.width - kRulerRightPadding - kArrowWidth,
                                    yCoord + (NSHeight(frameRects[0]) - stringSize.height) / 2.0,
                                    NSWidth(rect) - kRulerRightPadding,
                                    NSHeight(frameRects[0]));
-      [lineNumberString drawInRect:drawRect];
+      
+      NSRect markerRect = numberRect;
+      markerRect.origin.x = NSMinX(rect);
 
-      // Draw any markers. Adjust the drawRect to be the entire width of the
-      // ruler, rather than just the width of the string.
-      drawRect.origin.x = NSMinX(rect);
-
-      Breakpoint* test = [[[Breakpoint alloc] initWithLine:lineNumber
-                                                    inFile:[sourceView_ file]] autorelease];
-      if ([markers containsObject:test]) {
-        [self drawBreakpointInRect:drawRect];
+      if (isMarked) {
+        [self drawProgramCounterInRect:markerRect];
+      } else if (isBreakpoint) {
+        [self drawBreakpointInRect:markerRect];
       }
-      if (sourceView_.markedLine == lineNumber) {
-        [self drawProgramCounterInRect:drawRect];
-      }
+      
+      [lineNumberString drawInRect:numberRect];
     }
   }
 }
@@ -145,9 +149,9 @@ const CGFloat kRulerRightPadding = 2.5;
 
   // Determine the width of the ruler based on the line count.
   NSUInteger lastElement = lineIndex_.back() + 1;
-  NSAttributedString* lastElementString = [self attributedStringForLineNumber:lastElement];
+  NSAttributedString* lastElementString = [self attributedStringForLineNumber:lastElement withMarker:NO];
   NSSize boundingSize = [lastElementString size];
-  [self setRuleThickness:std::max(kDefaultWidth, boundingSize.width)];
+  [self setRuleThickness:std::max(kDefaultWidth, boundingSize.width + kArrowWidth)];
 
   [self setNeedsDisplay:YES];
 }
@@ -224,11 +228,18 @@ const CGFloat kRulerRightPadding = 2.5;
  * Takes in a line number and returns a formatted attributed string, usable
  * for drawing.
  */
-- (NSAttributedString*)attributedStringForLineNumber:(NSUInteger)line
+- (NSAttributedString*)attributedStringForLineNumber:(NSUInteger)line withMarker:(BOOL)marker
 {
-  NSString* format = [NSString stringWithFormat:@"%d", line];
+  NSString* format = [NSString stringWithFormat:@"%lu", (unsigned long)line];
+  NSDictionary* attrs;
+  if (marker) {
+    attrs = [self fontAttributes];
+  } else {
+    attrs = [self fontAttributesMarked];
+  }
+  
   return [[[NSAttributedString alloc] initWithString:format
-                                          attributes:[self fontAttributes]] autorelease];
+                                          attributes:attrs] autorelease];
 }
 
 /**
@@ -248,38 +259,50 @@ const CGFloat kRulerRightPadding = 2.5;
 }
 
 /**
+ * Returns the dictionary for an NSAttributedString with which the line numbers
+ * will be drawn on markers.
+ */
+- (NSDictionary*)fontAttributesMarked
+{
+  NSFont* font = [NSFont fontWithName:@"Menlo" size:10.0];
+  if (!font)
+    font = [NSFont fontWithName:@"Monaco" size:10.0];
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+          font, NSFontAttributeName,
+          [NSColor whiteColor], NSForegroundColorAttributeName,
+          nil
+          ];
+}
+
+/**
  * Draws a breakpoint (a blue arrow) in the specified rectangle.
  */
 - (void)drawBreakpointInRect:(NSRect)rect
 {
   [self drawMarkerInRect:rect
-               fillColor:[NSColor colorWithDeviceRed:0.004 green:0.557 blue:0.851 alpha:1.0]
-             strokeColor:[NSColor colorWithDeviceRed:0.0 green:0.404 blue:0.804 alpha:1.0]];
+               color:[NSColor colorWithDeviceRed:0.004 green:0.557 blue:0.851 alpha:1.0]];
 }
 
 /**
- * Draws the program counter (a red arrow) in the specified rectangle.
+ * Draws the program counter (a green arrow) in the specified rectangle.
  */
 - (void)drawProgramCounterInRect:(NSRect)rect
 {
   [self drawMarkerInRect:rect
-               fillColor:[[NSColor redColor] colorWithAlphaComponent:0.5]
-             strokeColor:[NSColor colorWithDeviceRed:0.788 green:0 blue:0 alpha:1.0]];
+               color:[NSColor colorWithDeviceRed:0.574 green:0.687 blue:0.519 alpha:1.0]];
 }
 
 /**
  * Draws the arrow shape in a given color.
  */
 - (void)drawMarkerInRect:(NSRect)rect
-               fillColor:(NSColor*)fill
-             strokeColor:(NSColor*)stroke
+               color:(NSColor*)fill
 {
   [[NSGraphicsContext currentContext] saveGraphicsState];
 
   NSBezierPath* path = [NSBezierPath bezierPath];
 
-  const CGFloat kPadding = 2.0;
-  const CGFloat kArrowWidth = 7.0;
+  const CGFloat kPadding = 2;
   const CGFloat minX = NSMinX(rect) + kPadding;
   const CGFloat maxX = NSMaxX(rect);
   const CGFloat minY = NSMinY(rect) + kPadding;
@@ -293,10 +316,6 @@ const CGFloat kRulerRightPadding = 2.5;
 
   [fill set];
   [path fill];
-
-  [stroke set];
-  [path setLineWidth:2];
-  [path stroke];
 
   [[NSGraphicsContext currentContext] restoreGraphicsState];
 }

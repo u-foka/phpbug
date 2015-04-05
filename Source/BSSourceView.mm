@@ -66,7 +66,9 @@
 
 - (void)setNeedsDisplay:(BOOL)flag
 {
+    [textView_ setNeedsDisplay:flag];
     [ruler_ setNeedsDisplay:flag];
+    [scrollView_ setNeedsDisplay:flag];
     [super setNeedsDisplay:flag];
 }
 

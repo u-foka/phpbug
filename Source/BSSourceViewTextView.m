@@ -35,7 +35,7 @@
     if ([sourceView_ markedLine] == line) {
       fragRect = [self convertRect:fragRect fromView:self];
       fragRect.origin.x = rect.origin.x;  // Flush all the way to the edge.
-      [[[NSColor redColor] colorWithAlphaComponent:0.25] set];
+      [[NSColor colorWithDeviceRed:0.574 green:0.687 blue:0.519 alpha:0.25] set];
       [NSBezierPath fillRect:fragRect];
       break;
     }
